@@ -52,6 +52,7 @@ func main() {
 	err := parseFlags()
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
-	fmt.Println(input)
+	connectToSpotify()
 }
