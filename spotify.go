@@ -1,13 +1,15 @@
 package main
 
 import (
-	"encoding/base64"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"net/url"
+	"log"
 	"strings"
+
+	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 type spotifyAPICredentials struct {
@@ -21,9 +23,23 @@ type spotifyResponse struct {
 	Expiration  int    `json:"expires_in"`
 }
 
-func connectToSpotify() string {
-	// Get Spotify API Credentials from Config
-	reqURL := "https://accounts.spotify.com/api/token"
+type track struct {
+	Artist string
+	Title  string
+	ID     string
+	BPM    int
+}
+
+type playlist struct {
+	Tracks []track
+}
+
+//type playlistResult struct {
+//	Items []interface{} `json:items`
+//}
+
+func connectToSpotify() spotify.Client {
+	// Get API Creds from Config & Create Config Object
 	var creds spotifyAPICredentials
 	configFile, err := ioutil.ReadFile("./config.json")
 	if err != nil {
@@ -34,39 +50,33 @@ func connectToSpotify() string {
 		fmt.Println("Error unmarshaling config JSON:", err)
 	}
 
-	// Construct the POST Request
-	auth := base64.StdEncoding.EncodeToString([]byte(creds.ClientID + ":" + creds.ClientSec))
-	data := url.Values{}
-	data.Set("grant_type", "client_credentials")
-	req, err := http.NewRequest("POST", reqURL, strings.NewReader(data.Encode()))
-	if err != nil {
-		fmt.Println("Error building Spotify request:", err)
-	}
-	req.Header.Set("Authorization", "Basic "+auth)
-	req.Header.Set("content-type", "application/x-www-form-urlencoded")
-
-	// Send POST Request
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println("Error making request:", err)
-	}
-	defer resp.Body.Close()
-
-	// Unmarshal Response & Return Access Token
-	resBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response body:", err)
-	}
-	var response spotifyResponse
-	err = json.Unmarshal(resBody, &response)
-	if err != nil {
-		fmt.Println("Error unmarshaling JSON response from Spotify:", err)
-		return ""
+	config := &clientcredentials.Config{
+		ClientID:     creds.ClientID,
+		ClientSecret: creds.ClientSec,
+		TokenURL:     spotify.TokenURL,
 	}
 
-	return response.AccessToken
+	token, err := config.Token(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to get auth token: %v", err)
+	}
+
+	client := spotify.Authenticator{}.NewClient(token)
+	return client
 }
 
-func getPlaylistContents() {
+func convertSpotifyURLtoID(playlistURL string) string {
+	fmt.Println("Original URL:", playlistURL)
+	spotifyID := strings.Split(playlistURL, "/playlist/")[1]
+	spotifyID = strings.Split(spotifyID, "?")[0]
+	fmt.Println("Stripped ID:", spotifyID)
+	return spotifyID
+}
 
+func getPlaylistContents(client spotify.Client, spotifyID string) {
+	playlistTracks, err := client.GetPlaylistTracks(spotify.ID(spotifyID))
+	if err != nil {
+		fmt.Println("Failed to retreive playlist information:", err)
+	}
+	fmt.Println(playlistTracks)
 }
