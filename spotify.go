@@ -17,12 +17,6 @@ type spotifyAPICredentials struct {
 	ClientSec string `json:"clientSec"`
 }
 
-type spotifyResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	Expiration  int    `json:"expires_in"`
-}
-
 type track struct {
 	Artist string
 	Title  string
@@ -33,10 +27,6 @@ type track struct {
 type playlist struct {
 	Tracks []track
 }
-
-//type playlistResult struct {
-//	Items []interface{} `json:items`
-//}
 
 func connectToSpotify() spotify.Client {
 	// Get API Creds from Config & Create Config Object
@@ -78,5 +68,10 @@ func getPlaylistContents(client spotify.Client, spotifyID string) {
 	if err != nil {
 		fmt.Println("Failed to retreive playlist information:", err)
 	}
-	fmt.Println(playlistTracks)
+	fmt.Println("Number of tracks:", playlistTracks.Total)
+	fmt.Println("")
+	fmt.Println(playlistTracks.Tracks[0].Track.Artists)
+	// Get each track and create a track struct
+	// For each struct, get the BPM
+	// Store all tracks in a playlist struct
 }
