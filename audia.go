@@ -54,7 +54,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	spotifyClient := connectToSpotify()
-	spotifyID := convertSpotifyURLtoID(input.URL)
-	getPlaylistContents(spotifyClient, spotifyID)
+	spotifyClient, token := connectToSpotify()
+	spotifyID := convertPlaylistURLtoID(input.URL)
+	getPlaylistContents(spotifyClient, token, spotifyID)
 }
