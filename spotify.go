@@ -23,7 +23,7 @@ type track struct {
 	Artist     string
 	Title      string
 	ID         string
-	BPM        float64
+	BPM        int
 	Attributes trackAttributes
 }
 
@@ -49,6 +49,7 @@ type playlist struct {
 
 func connectToSpotify() (spotify.Client, string) {
 	// Get API Creds from Config & Create Config Object
+	// TODO: This should be its own func
 	var creds spotifyAPICredentials
 	configFile, err := ioutil.ReadFile("./config.json")
 	if err != nil {
@@ -59,6 +60,7 @@ func connectToSpotify() (spotify.Client, string) {
 		fmt.Println("Error unmarshaling config JSON:", err)
 	}
 
+	// Configure Client & Connect
 	config := &clientcredentials.Config{
 		ClientID:     creds.ClientID,
 		ClientSecret: creds.ClientSec,
@@ -69,16 +71,13 @@ func connectToSpotify() (spotify.Client, string) {
 	if err != nil {
 		log.Fatalf("Failed to get auth token: %v", err)
 	}
-	fmt.Println("Token:", token.AccessToken)
 	client := spotify.Authenticator{}.NewClient(token)
 	return client, token.AccessToken
 }
 
 func convertPlaylistURLtoID(playlistURL string) string {
-	fmt.Println("Original URL:", playlistURL)
 	spotifyID := strings.Split(playlistURL, "/playlist/")[1]
 	spotifyID = strings.Split(spotifyID, "?")[0]
-	fmt.Println("Stripped ID:", spotifyID)
 	return spotifyID
 }
 
@@ -107,25 +106,29 @@ func getTrackAttributes(token string, spotifyID string) trackAttributes {
 
 }
 
-func getPlaylistContents(client spotify.Client, token string, spotifyID string) {
+// TODO: PAGINATION!!! This only returns 100 items,
+// even if there are more than 100 items in the playlist.
+func getPlaylistContents(client spotify.Client, token string, spotifyID string) playlist {
 	playlistTracks, err := client.GetPlaylistTracks(spotify.ID(spotifyID))
 	if err != nil {
 		fmt.Println("Failed to retreive playlist information:", err)
 	}
-	fmt.Println("Number of tracks:", playlistTracks.Total)
+	fmt.Println("Number of tracks in playlist:", playlistTracks.Total)
 	fmt.Println("")
+
+	var p playlist
 
 	for _, t := range playlistTracks.Tracks {
 		var track track
 		track.Artist = t.Track.Artists[0].Name
 		track.ID = t.Track.ID.String()
 		track.Title = t.Track.Name
+		// TODO: getTrackAttributes can be done in a single call for all tracks.
+		// See Spotify API docs for a way to implement this.
 		track.Attributes = getTrackAttributes(token, track.ID)
-		track.BPM = math.RoundToEven(track.Attributes.Tempo)
-		fmt.Println("")
-		fmt.Println(track)
+		track.BPM = int(math.RoundToEven(track.Attributes.Tempo))
+		p.Tracks = append(p.Tracks, track)
 	}
-	// Get each track and create a track struct
-	// For each struct, get the BPM
-	// Store all tracks in a playlist struct
+
+	return p
 }
