@@ -5,5 +5,8 @@ For example, a DJ would need to have their .mp3 files stored locally in order to
 
 ## Usage
 ```
-audia.exe -url <URL of your playlist> -destination <The location on disk where you'd like your music to be saved>
+audia.exe -url <URL of your playlist> -destination <The location on disk where you'd like your music to be saved> -buffersize <Number of songs to download at a time>
 ```
+
+## Prerequisites
+Audia uses two popular tools under the hood: youtube-dl to download videos, and ffmpeg to extract audio. Both of these tools must be installed, and the path to each executable should be in your PATH.
