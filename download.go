@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 )
@@ -16,7 +15,8 @@ func getAudioFromVideo(video youtubeVideo, track track, destDir string) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Fatalf("cmd.Run() failed with %s\n", err)
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return
 	}
 	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
 	outLines := strings.Split(outStr, "\n")
