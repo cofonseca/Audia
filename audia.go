@@ -90,8 +90,3 @@ func main() {
 	}
 
 }
-
-// create a buffered channel of size bufferSize to send data between searchYoutubeForTrack and getAudioFromVideo
-// for each track in playlist.Tracks,
-// run searchYoutubeForTrack and write the results to the channel
-// getAudioFromVideo should grab one buffered result from the channel and download the track
