@@ -3,6 +3,11 @@ Audia is a simple command-line application that enables you to download all song
 
 For example, a DJ would need to have their .mp3 files stored locally in order to mix music, but organizing music is difficult, and downloading songs individually is an extremely slow and tedious process. Using Audia, you can simply provide the URL to a Spotify playlist, and Audia will automatically find all of the songs, download them to a given location on your computer, and rename them in the format of "BPM - Artist - Title".
 
+## Prerequisites
+Audia uses two popular tools under the hood: youtube-dl to download videos, and ffmpeg to extract audio. Both of these tools must be installed, and the path to each executable should be in your PATH.
+
+Alternatively, if you don't want to install and set up dependencies, a Docker image is available and can easily be executed on any operating system.
+
 ## Usage
 ### Parameters
 Audia requires three parameters:
@@ -27,13 +32,8 @@ Example:
 docker run -it -rm --name audia -v C:/Users/jsmith/Music:/out -e BUFFER_SIZE=8 -e URL=https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n?si=-zG9PaXMReO2vVJ-YXvncA gcr.io/rebred-296012/audia:latest
 ```
 
-## Prerequisites
-Audia uses two popular tools under the hood: youtube-dl to download videos, and ffmpeg to extract audio. Both of these tools must be installed, and the path to each executable should be in your PATH.
-
-Alternatively, if you don't want to install and set up dependencies, a Docker image is available and can easily be executed on any operating system.
-
 
 ## To Do:
 - Add SoundCloud Support to match Spotify.
 - Increase YouTube API key quota, add more keys, or get info from YouTube some other way not requiring an API key.
-- Soundcloud results are paginated. A playlist might have >100 songs, but we only grab info for the first 100. This should be fixed.
+- Spotify results are paginated. A playlist might have >100 songs, but we only grab info for the first 100. This should be fixed.
