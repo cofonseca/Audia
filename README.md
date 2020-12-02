@@ -4,9 +4,30 @@ Audia is a simple command-line application that enables you to download all song
 For example, a DJ would need to have their .mp3 files stored locally in order to mix music, but organizing music is difficult, and downloading songs individually is an extremely slow and tedious process. Using Audia, you can simply provide the URL to a Spotify playlist, and Audia will automatically find all of the songs, download them to a given location on your computer, and rename them in the format of "BPM - Artist - Title".
 
 ## Usage
+### Parameters
+Audia requires three parameters:
+- URL: The full Spotify URL of the playlist that you'd like to download. To find this, open Spotify, right-click on your playlist, go to Share, and click on Copy Playlist Link.
+- Destination: The full path to a folder on your hard drive where you would like your music to be saved.
+- BufferSize: The number of songs to download at a time, between 1 and 254. A higher number will download more songs at the same time, but will use more CPU, memory, and network bandwidth. Recommendation is 1 per CPU thread.
+
+### Binary
 ```
-audia.exe -url <URL of your playlist> -destination <The location on disk where you'd like your music to be saved> -buffersize <Number of songs to download at a time>
+audia.exe -url <URL> -destination <PATH> -buffersize <NUMBER>
+```
+Example:
+```
+audia.exe -url https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n?si=-zG9PaXMReO2vVJ-YXvncA -destination C:\Users\jsmith\Music -buffersize 8
+```
+### Docker
+```
+docker run -it --rm --name audia -v <PATH>:/out -e BUFFER_SIZE=<NUMBER> -e URL=<URL> gcr.io/rebred/audia:latest
+```
+Example:
+```
+docker run -it -rm --name audia -v C:/Users/jsmith/Music:/out -e BUFFER_SIZE=8 -e URL=https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n?si=-zG9PaXMReO2vVJ-YXvncA gcr.io/rebred-296012/audia:latest
 ```
 
 ## Prerequisites
 Audia uses two popular tools under the hood: youtube-dl to download videos, and ffmpeg to extract audio. Both of these tools must be installed, and the path to each executable should be in your PATH.
+
+Alternatively, if you don't want to install and set up dependencies, a Docker image is available and can easily be executed on any operating system.
