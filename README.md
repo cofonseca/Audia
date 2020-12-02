@@ -31,3 +31,9 @@ docker run -it -rm --name audia -v C:/Users/jsmith/Music:/out -e BUFFER_SIZE=8 -
 Audia uses two popular tools under the hood: youtube-dl to download videos, and ffmpeg to extract audio. Both of these tools must be installed, and the path to each executable should be in your PATH.
 
 Alternatively, if you don't want to install and set up dependencies, a Docker image is available and can easily be executed on any operating system.
+
+
+## To Do:
+- Add SoundCloud Support to match Spotify.
+- Increase YouTube API key quota, add more keys, or get info from YouTube some other way not requiring an API key.
+- Soundcloud results are paginated. A playlist might have >100 songs, but we only grab info for the first 100. This should be fixed.
