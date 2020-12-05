@@ -47,23 +47,11 @@ type playlist struct {
 	Tracks []track
 }
 
-func connectToSpotify() (spotify.Client, string) {
-	// Get API Creds from Config & Create Config Object
-	// TODO: This should be its own func
-	var creds spotifyAPICredentials
-	configFile, err := ioutil.ReadFile("./config.json")
-	if err != nil {
-		fmt.Println("Error reading from config.json:", err)
-	}
-	err = json.Unmarshal(configFile, &creds)
-	if err != nil {
-		fmt.Println("Error unmarshaling config JSON:", err)
-	}
-
+func connectToSpotify(clientID string, clientSec string) (spotify.Client, string) {
 	// Configure Client & Connect
 	config := &clientcredentials.Config{
-		ClientID:     creds.ClientID,
-		ClientSecret: creds.ClientSec,
+		ClientID:     clientID,
+		ClientSecret: clientSec,
 		TokenURL:     spotify.TokenURL,
 	}
 
@@ -76,13 +64,13 @@ func connectToSpotify() (spotify.Client, string) {
 }
 
 func convertPlaylistURLtoID(playlistURL string) string {
-	spotifyID := strings.Split(playlistURL, "/playlist/")[1]
-	spotifyID = strings.Split(spotifyID, "?")[0]
-	return spotifyID
+	playlistID := strings.Split(playlistURL, "/playlist/")[1]
+	playlistID = strings.Split(playlistID, "?")[0]
+	return playlistID
 }
 
-func getTrackAttributes(token string, spotifyID string) trackAttributes {
-	URL := "https://api.spotify.com/v1/audio-features/" + spotifyID
+func getTrackAttributes(token string, playlistID string) trackAttributes {
+	URL := "https://api.spotify.com/v1/audio-features/" + playlistID
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", URL, nil)
 	if err != nil {
@@ -108,8 +96,8 @@ func getTrackAttributes(token string, spotifyID string) trackAttributes {
 
 // TODO: PAGINATION!!! This only returns 100 items,
 // even if there are more than 100 items in the playlist.
-func getPlaylistContents(client spotify.Client, token string, spotifyID string) playlist {
-	playlistTracks, err := client.GetPlaylistTracks(spotify.ID(spotifyID))
+func getPlaylistContents(client spotify.Client, token string, playlistID string) playlist {
+	playlistTracks, err := client.GetPlaylistTracks(spotify.ID(playlistID))
 	if err != nil {
 		fmt.Println("Failed to retreive playlist information:", err)
 	}

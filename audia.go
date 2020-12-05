@@ -66,9 +66,12 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	spotifyClient, token := connectToSpotify()
-	spotifyID := convertPlaylistURLtoID(input.URL)
-	playlist := getPlaylistContents(spotifyClient, token, spotifyID)
+
+	conf := parseConfig("./config.json")
+
+	spotifyClient, token := connectToSpotify(conf.SpotifyClientID, conf.SpotifyClientSec)
+	playlistID := convertPlaylistURLtoID(input.URL)
+	playlist := getPlaylistContents(spotifyClient, token, playlistID)
 	yt := connectToYoutube()
 
 	numJobs := len(playlist.Tracks)

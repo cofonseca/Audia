@@ -41,7 +41,7 @@ func connectToYoutube() *youtube.Service {
 
 	// Configure Client & Connect
 	ctx := context.Background()
-	service, err := youtube.NewService(ctx, option.WithAPIKey(creds.APIKeys[0]))
+	service, err := youtube.NewService(ctx, option.WithAPIKey(creds.APIKeys[1]))
 	if err != nil {
 		fmt.Println("Failed to create YouTube service:", err)
 	}
