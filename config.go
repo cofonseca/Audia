@@ -9,8 +9,10 @@ import (
 type config struct {
 	SpotifyClientID   string   `json:"clientID"`
 	SpotifyClientSec  string   `json:"clientSec"`
-	UseYoutubeAPIKeys bool     `json:"useYoutubeApiKeys"`
+	UseYoutubeAPI     bool     `json:"useYoutubeApiKeys"`
 	YoutubeAPIKeys    []string `json:"youtubeApiKeys"`
+	YoutubeClientName string   `json:"youtubeClientName"`
+	YoutubeClientVer  string   `json:"youtubeClientVer"`
 }
 
 func parseConfig(filepath string) config {

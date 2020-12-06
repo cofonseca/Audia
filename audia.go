@@ -50,16 +50,6 @@ func parseFlags() error {
 	return nil
 }
 
-func worker(id int, jobs <-chan int, results chan<- int, service *youtube.Service, playlist playlist) {
-	for j := range jobs {
-		fmt.Println("worker", id, "started  job", j)
-		result := searchYoutubeForTrack(service, playlist.Tracks[j-1])
-		getAudioFromVideo(result, playlist.Tracks[j-1], input.Destination)
-		fmt.Println("worker", id, "finished job", j)
-		results <- j * 2
-	}
-}
-
 func main() {
 	err := parseFlags()
 	if err != nil {
@@ -69,18 +59,28 @@ func main() {
 
 	conf := parseConfig("./config.json")
 
+	// Get Track List from Spotify
 	spotifyClient, token := connectToSpotify(conf.SpotifyClientID, conf.SpotifyClientSec)
 	playlistID := convertPlaylistURLtoID(input.URL)
 	playlist := getPlaylistContents(spotifyClient, token, playlistID)
-	yt := connectToYoutube()
 
 	numJobs := len(playlist.Tracks)
 	fmt.Println(numJobs)
 	jobs := make(chan int, numJobs)
 	results := make(chan int, numJobs)
 
-	for w := 1; w <= int(input.BufferSize); w++ {
-		go worker(w, jobs, results, yt, playlist)
+	// Search YouTube for Track & Download
+	var yt *youtube.Service
+	if conf.UseYoutubeAPI == true {
+		yt = connectToYoutubeByAPI(conf.YoutubeAPIKeys)
+
+		for w := 1; w <= int(input.BufferSize); w++ {
+			go ytAPIWorker(w, jobs, results, yt, playlist)
+		}
+	} else {
+		for w := 1; w <= int(input.BufferSize); w++ {
+			go ytAJAXWorker(w, jobs, results, conf, playlist)
+		}
 	}
 
 	for j := 1; j <= numJobs; j++ {
