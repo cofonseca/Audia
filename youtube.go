@@ -37,7 +37,7 @@ func connectToYoutubeByAPI(APIKeys []string) *youtube.Service {
 	return service
 }
 
-func searchYoutubeForTrackByAJAX(conf config, track track) youtubeVideo {
+func searchYoutubeForTrackByAJAX(conf config, track track) (youtubeVideo, bool) {
 	var video youtubeVideo
 	var ytResults youtubeSearchResults
 	youtubeSearchURL := "https://www.youtube.com/search_ajax?style=json&search_query="
@@ -64,16 +64,18 @@ func searchYoutubeForTrackByAJAX(conf config, track track) youtubeVideo {
 		fmt.Println("Couldn't unmarshal JSON response:", err)
 	}
 	json.Unmarshal(jsonBody, &ytResults)
+	if len(ytResults.Videos) <= 0 {
+		return video, false
+	}
 	video = ytResults.Videos[0]
 	youtubeBaseURL := "https://www.youtube.com/watch?v="
 	video.URL = fmt.Sprintf("%s%s", youtubeBaseURL, video.ID)
-	return video
+	return video, true
 }
 
 func searchYoutubeForTrackByAPI(service *youtube.Service, track track) youtubeVideo {
 	// Perform Search
 	list := []string{"snippet", "id"}
-	//list = append(list, "snippet", "id")
 	query := fmt.Sprintf("%s - %s", track.Artist, track.Title)
 	search := service.Search.List(list).MaxResults(1).Q(query)
 	result, err := search.Do()
@@ -106,10 +108,13 @@ func ytAPIWorker(id int, jobs <-chan int, results chan<- int, service *youtube.S
 
 func ytAJAXWorker(id int, jobs <-chan int, results chan<- int, conf config, playlist playlist) {
 	for j := range jobs {
-		fmt.Println("worker", id, "started  job", j)
-		result := searchYoutubeForTrackByAJAX(conf, playlist.Tracks[j-1])
-		getAudioFromVideo(result, playlist.Tracks[j-1], input.Destination)
-		fmt.Println("worker", id, "finished job", j)
+		result, found := searchYoutubeForTrackByAJAX(conf, playlist.Tracks[j-1])
+		if found {
+			fmt.Println("Downloading", playlist.Tracks[j-1].Artist, "-", playlist.Tracks[j-1].Title, "...")
+			getAudioFromVideo(result, playlist.Tracks[j-1], input.Destination)
+		} else {
+			fmt.Println("Unable to download", playlist.Tracks[j-1].Artist, "-", playlist.Tracks[j-1].Title, ". Skipping...")
+		}
 		results <- j * 2
 	}
 }
