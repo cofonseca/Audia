@@ -32,8 +32,5 @@ Example:
 docker run -it -rm --name audia -v C:/Users/jsmith/Music:/out -e WORKERS=8 -e URL=https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n?si=-zG9PaXMReO2vVJ-YXvncA gcr.io/rebred-296012/audia:latest
 ```
 
-
-## To Do:
-- Add SoundCloud Support to match Spotify.
-- Increase YouTube API key quota, add more keys, or get info from YouTube some other way not requiring an API key.
-- Spotify results are paginated. A playlist might have >100 songs, but we only grab info for the first 100. This should be fixed.
+### Issues & Contributions
+To suggest changes/improvements, report bugs, or request features, feel free to file an issue. If you are interested in contributing to Audia, feel free to reach out to me via e-mail at me@coreyfonseca.com.
