@@ -17,4 +17,4 @@ RUN go build . \
     && curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl \
     && chmod a+rx /usr/local/bin/youtube-dl
 
-CMD ./Audia -url $URL -destination /out -buffersize $BUFFER_SIZE
+CMD ./Audia -url $URL -destination /out -workers $WORKERS

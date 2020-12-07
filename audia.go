@@ -12,7 +12,7 @@ import (
 type userInput struct {
 	URL         string
 	Destination string
-	BufferSize  uint
+	Workers     uint
 }
 
 var (
@@ -30,7 +30,7 @@ func validateDestinationPath(path string) {
 func parseFlags() error {
 	flag.StringVar(&input.URL, "url", "", "The full URL of the song or playlist.")
 	flag.StringVar(&input.Destination, "destination", "", "The absolute path to a folder where the MP3 files should be saved.")
-	flag.UintVar(&input.BufferSize, "buffersize", 1, "The number of songs to download at a time. A higher number will download more songs concurrently, meaning that a large playlist will download faster. A higher number will require more network bandwith and higher CPU usage. General recommendation is 1 per CPU thread.")
+	flag.UintVar(&input.Workers, "workers", 1, "The number of songs to download at a time. A higher number will download more songs concurrently, meaning that a large playlist may download faster. A higher number will require more network bandwith and a more powerful CPU. General recommendation is 1 per logical processor.")
 	flag.Parse()
 
 	if input.URL == "" {
@@ -43,8 +43,8 @@ func parseFlags() error {
 
 	validateDestinationPath(input.Destination)
 
-	if input.BufferSize <= 0 || input.BufferSize >= 255 {
-		return errors.New("Required parameter 'buffersize' is invalid. Please provide a buffer size by using -buffersize <size>. Buffersize must be a positive number between 1 and 254")
+	if input.Workers <= 0 || input.Workers >= 255 {
+		return errors.New("Required parameter 'workers' is invalid. Please provide a number of workers by using -workers <size>. Workers must be a positive integer between 1 and 254")
 	}
 
 	return nil
@@ -74,11 +74,11 @@ func main() {
 	if conf.UseYoutubeAPI == true {
 		yt = connectToYoutubeByAPI(conf.YoutubeAPIKeys)
 
-		for w := 1; w <= int(input.BufferSize); w++ {
+		for w := 1; w <= int(input.Workers); w++ {
 			go ytAPIWorker(w, jobs, results, yt, playlist)
 		}
 	} else {
-		for w := 1; w <= int(input.BufferSize); w++ {
+		for w := 1; w <= int(input.Workers); w++ {
 			go ytAJAXWorker(w, jobs, results, conf, playlist)
 		}
 	}

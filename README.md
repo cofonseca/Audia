@@ -13,23 +13,23 @@ Alternatively, if you don't want to install and set up dependencies, a Docker im
 Audia requires three parameters:
 - URL: The full Spotify URL of the playlist that you'd like to download. To find this, open Spotify, right-click on your playlist, go to Share, and click on Copy Playlist Link.
 - Destination: The full path to a folder on your hard drive where you would like your music to be saved.
-- BufferSize: The number of songs to download at a time, between 1 and 254. A higher number will download more songs at the same time, but will use more CPU, memory, and network bandwidth. Recommendation is 1 per CPU thread.
+- Workers: The number of songs to download at a time, between 1 and 254. A higher number will download more songs at the same time, but will require a more powerful CPU and more network bandwidth. Recommendation is 1 per logical processor.
 
 ### Binary
 ```
-audia.exe -url <URL> -destination <PATH> -buffersize <NUMBER>
+audia.exe -url <URL> -destination <PATH> -workers <NUMBER>
 ```
 Example:
 ```
-audia.exe -url https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n?si=-zG9PaXMReO2vVJ-YXvncA -destination C:\Users\jsmith\Music -buffersize 8
+audia.exe -url https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n?si=-zG9PaXMReO2vVJ-YXvncA -destination C:\Users\jsmith\Music -workers 8
 ```
 ### Docker
 ```
-docker run -it --rm --name audia -v <PATH>:/out -e BUFFER_SIZE=<NUMBER> -e URL=<URL> gcr.io/rebred/audia:latest
+docker run -it --rm --name audia -v <PATH>:/out -e WORKERS=<NUMBER> -e URL=<URL> gcr.io/rebred/audia:latest
 ```
 Example:
 ```
-docker run -it -rm --name audia -v C:/Users/jsmith/Music:/out -e BUFFER_SIZE=8 -e URL=https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n?si=-zG9PaXMReO2vVJ-YXvncA gcr.io/rebred-296012/audia:latest
+docker run -it -rm --name audia -v C:/Users/jsmith/Music:/out -e WORKERS=8 -e URL=https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n?si=-zG9PaXMReO2vVJ-YXvncA gcr.io/rebred-296012/audia:latest
 ```
 
 
