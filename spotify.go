@@ -27,6 +27,14 @@ type track struct {
 	Attributes trackAttributes
 }
 
+type audioFeaturesList struct {
+	AttributesList []trackAttributes `json:"audio_features"`
+}
+
+type trackAttributeMap struct {
+	AttributeMap map[string]trackAttributes
+}
+
 type trackAttributes struct {
 	Danceability     float32 `json:"danceability"`
 	Energy           float32 `json:"energy"`
@@ -41,6 +49,7 @@ type trackAttributes struct {
 	Tempo            float64 `json:"tempo"`
 	DurationMS       int32   `json:"duration_ms"`
 	TimeSignature    int     `json:"time_signature"`
+	TrackID          string  `json:"id"`
 }
 
 type playlist struct {
@@ -69,10 +78,35 @@ func convertPlaylistURLtoID(playlistURL string) string {
 	return playlistID
 }
 
-func getTrackAttributes(token string, playlistID string) trackAttributes {
-	URL := "https://api.spotify.com/v1/audio-features/" + playlistID
+func getTrackBPM(maps []trackAttributeMap, pl playlist) playlist {
+	var p playlist
+	for _, track := range pl.Tracks {
+		for _, m := range maps {
+			if _, exists := m.AttributeMap[track.ID]; exists {
+				track.Attributes = m.AttributeMap[track.ID]
+				track.BPM = int(math.RoundToEven(m.AttributeMap[track.ID].Tempo))
+				p.Tracks = append(p.Tracks, track)
+			}
+
+		}
+	}
+
+	return p
+}
+
+func getAttributesOfTracks(token string, tracks []track) trackAttributeMap {
+	URL := "https://api.spotify.com/v1/audio-features/?ids="
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", URL, nil)
+
+	var IDList string
+	for _, track := range tracks {
+		IDList = fmt.Sprintf("%s%s,", IDList, track.ID)
+	}
+	IDList = strings.TrimSuffix(IDList, ",")
+
+	queryURL := fmt.Sprintf("%s%s", URL, IDList)
+
+	req, err := http.NewRequest("GET", queryURL, nil)
 	if err != nil {
 		fmt.Println("Error building getTrackBPM request:", err)
 	}
@@ -87,36 +121,52 @@ func getTrackAttributes(token string, playlistID string) trackAttributes {
 	if err != nil {
 		fmt.Println("Couldn't unmarshal JSON response:", err)
 	}
-	var attributes trackAttributes
-	json.Unmarshal(jsonBody, &attributes)
+	var attributesList audioFeaturesList
+	json.Unmarshal(jsonBody, &attributesList)
 
-	return attributes
+	var attributeMap trackAttributeMap
+	attributeMap.AttributeMap = make(map[string]trackAttributes)
+	for _, a := range attributesList.AttributesList {
+		attributeMap.AttributeMap[a.TrackID] = a
+	}
+
+	return attributeMap
 
 }
 
-// TODO: PAGINATION!!! This only returns 100 items,
-// even if there are more than 100 items in the playlist.
 func getPlaylistContents(client spotify.Client, token string, playlistID string) playlist {
 	playlistTracks, err := client.GetPlaylistTracks(spotify.ID(playlistID))
 	if err != nil {
 		fmt.Println("Failed to retreive playlist information:", err)
 	}
-	fmt.Println("Number of tracks in playlist:", playlistTracks.Total)
-	fmt.Println("")
 
 	var p playlist
+	var attributes []trackAttributeMap
 
-	for _, t := range playlistTracks.Tracks {
-		var track track
-		track.Artist = t.Track.Artists[0].Name
-		track.ID = t.Track.ID.String()
-		track.Title = t.Track.Name
-		// TODO: getTrackAttributes can be done in a single call for all tracks.
-		// See Spotify API docs for a way to implement this.
-		track.Attributes = getTrackAttributes(token, track.ID)
-		track.BPM = int(math.RoundToEven(track.Attributes.Tempo))
-		p.Tracks = append(p.Tracks, track)
+	for page := 1; ; page++ {
+		var getAttributesList []track
+
+		for _, t := range playlistTracks.Tracks {
+			trk := track{
+				Artist: t.Track.Artists[0].Name,
+				ID:     t.Track.ID.String(),
+				Title:  t.Track.Name,
+			}
+			p.Tracks = append(p.Tracks, trk)
+			getAttributesList = append(getAttributesList, trk)
+		}
+
+		attributes = append(attributes, getAttributesOfTracks(token, getAttributesList))
+
+		err = client.NextPage(playlistTracks)
+		if err == spotify.ErrNoMorePages {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	return p
+	pl := getTrackBPM(attributes, p)
+	return pl
 }
